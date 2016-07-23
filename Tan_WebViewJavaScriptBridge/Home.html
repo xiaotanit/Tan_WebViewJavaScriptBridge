@@ -1,0 +1,58 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <style type="text/css">
+            html { font-family:Helvetica; color:#222; background:#D5FFFD; border: 5px dashed blue;}
+            .rowH3{margin: 0px; text-align: center; color: red;}
+            .jsBtn{font-size: 18px; color: red; }
+            .logoutBtn{display: none;}
+            </style>
+    </head>
+    <body>
+        <br/><h3 class="rowH3">商城首页Html</h3><br/>
+        <button class="jsBtn" id="jsBtn">戳我去领奖</button>&nbsp;
+        <button class="logoutBtn" style="font-size: 18px;">退出登录</button>
+        <h1>领奖次数：<span id="prizeNum">0</span></h1>
+    </body>
+</html>
+
+<script type="text/javascript">
+  function connectWebViewJavascriptBridge(callback) {
+      if (window.WebViewJavascriptBridge) {
+          callback(WebViewJavascriptBridge);
+      } else {
+          document.addEventListener('WebViewJavascriptBridgeReady', function() {
+                  callback(WebViewJavascriptBridge);
+          }, false);
+      }
+  }
+
+  //初始化调用函数connectWebViewJavascriptBridge
+  connectWebViewJavascriptBridge(function(bridge) {
+                          
+      bridge.init(function(message, responseCallback) {});  //初始化bridge
+                                 
+      //注册os调用js更新领奖次数消息
+      bridge.registerHandler('objc_Call_JS_UpdateNum', function(data, responseCallback) {
+            document.getElementById('prizeNum').innerHTML = data.num;
+            (document.getElementsByClassName('logoutBtn')[0]).style.display="block";
+      });
+                                 
+      //js给oc发出去领奖消息
+      var prizeObj = document.getElementById('jsBtn');
+      prizeObj.onclick = function(e) {
+          e.preventDefault();
+          //给IOS发送消息
+          bridge.callHandler('js_Call_Objc_Prize', '', function(response) {   });
+      }
+
+      //js给oc发出退出登录
+      var logoutObj = document.getElementsByClassName('logoutBtn')[0];
+      logoutObj.onclick = function(e){
+          e.preventDefault();
+          bridge.callHandler('js_Call_Objc_Logout', '', function(response){  });
+         (document.getElementsByClassName('logoutBtn')[0]).style.display="none";
+      }
+
+  });                     
+</script>

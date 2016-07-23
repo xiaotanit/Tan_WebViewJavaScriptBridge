@@ -1,0 +1,61 @@
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<style type="text/css">
+			html { font-family:Helvetica; color:#222; background:#D5FFFD; border: 5px dashed blue;}
+			.rowH3{margin: 0px; text-align: center;}
+			.jsBtn{font-size: 18px;}
+		</style>
+	</head>
+	<body>
+		<h3 class="rowH3">测试OC和JS互相调用</h3>
+		<button class="jsBtn" id="jsBtn">JS调用OC方法</button>
+		<div id="logDiv"><!-- 打印日志 --></div>
+	</body>
+</html>
+<script type="text/javascript">
+	window.onerror = function(err) {
+		printLog(err);
+	}
+	
+	function connectWebViewJavascriptBridge(callback) {
+		if (window.WebViewJavascriptBridge) {
+			callback(WebViewJavascriptBridge);
+		} else {
+			document.addEventListener('WebViewJavascriptBridgeReady', function() {
+				callback(WebViewJavascriptBridge);
+			}, false);
+		}
+	}
+    
+    var uniqueId = 1;
+    //日志打印方法
+    function printLog(data) {
+        var logObj = document.getElementById('logDiv');
+        var el = document.createElement('div');
+        el.className = 'logLine';
+        el.innerHTML = uniqueId++ + ': ' + JSON.stringify(data); //json转字符串
+        if (logObj.children.length) { logObj.insertBefore(el, logObj.children[0]) }
+        else { logObj.appendChild(el) }
+    }
+	
+	//初始化调用函数connectWebViewJavascriptBridge
+	connectWebViewJavascriptBridge(function(bridge) {
+        
+		bridge.init(function(message, responseCallback) {});  
+                                   
+        //注册js响应方法，响应OC调用，标识objc_Call_JS_Func
+		bridge.registerHandler('objc_Call_JS_Func', function(data, responseCallback) {
+            printLog(data);  //打印oc传过来的参数
+		});
+
+		//给标签按钮设置点击事件
+		var callbackButton = document.getElementById('jsBtn');
+		callbackButton.onclick = function(e) {
+			e.preventDefault();
+            //注册标识js_Call_Objc_Func，便于js给IOS发送消息
+			bridge.callHandler('js_Call_Objc_Func', {id: 1, info: 'hello, iOS, 我从js那边过来！'},  function(response) { });
+		}
+	});
+	
+</script>
